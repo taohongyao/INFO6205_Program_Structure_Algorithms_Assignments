@@ -7,7 +7,12 @@
  */
 package edu.neu.coe.info6205.union_find;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * Height-weighted Quick Union with Path Compression
@@ -80,9 +85,23 @@ public class UF_HWQUPC implements UF {
      */
     public int find(int p) {
         validate(p);
-        int root = p;
-        // TO BE IMPLEMENTED
-        return root;
+//        int currentIndex=p;
+//        int root=parent[p];
+//        while (root!=currentIndex){
+//            currentIndex=root;
+//            root=parent[currentIndex];
+//        }
+//        return root;
+        int currentNode=p;
+        int parent=getParent(currentNode);
+        while (parent!=currentNode) {
+            if(pathCompression){
+                doPathCompression(currentNode);
+            }
+            currentNode=getParent(currentNode);
+            parent=getParent(currentNode);
+        }
+        return parent;
     }
 
     /**
@@ -168,7 +187,20 @@ public class UF_HWQUPC implements UF {
     private boolean pathCompression;
 
     private void mergeComponents(int i, int j) {
-        // TO BE IMPLEMENTED make shorter root point to taller one
+        int iroot=find(i);
+        int jroot=find(j);
+        if(iroot==jroot) return;
+        int iRootHeight=height[iroot];
+        int jRootHeight=height[jroot];
+        if(iRootHeight>=jRootHeight){
+            updateParent(jroot,iroot);
+            updateHeight(iroot,jroot);
+        }else {
+            updateParent(iroot,jroot);
+            updateHeight(jroot,iroot);
+        }
+
+
     }
 
     /**
@@ -176,5 +208,55 @@ public class UF_HWQUPC implements UF {
      */
     private void doPathCompression(int i) {
         // TO BE IMPLEMENTED update parent to value of grandparent
+        int grandparent=getParent(getParent(i));
+        updateParent(i,grandparent);
+    }
+
+    public static int count(int n){
+        UF_HWQUPC uf_hwqupc=new UF_HWQUPC(n);
+        int connectCount=0;
+        Random random=new Random();
+        while (uf_hwqupc.components()!=1){
+            int p=random.nextInt(n);
+            int q=random.nextInt(n);
+            uf_hwqupc.connect(p,q);
+            connectCount++;
+        }
+        return connectCount;
+    }
+
+    public static void main(String[] args) {
+        String fileName="CSV/Assignment3/n_with_connection.csv";
+        writeToCSV(fileName,"N,Connection");
+        int n=10;
+        int times=20;
+        int size=100;
+        for(int i=0;i<times;i++){
+            long sum =0;
+            for(int j=0; j<size; j++){
+                sum +=count(n);
+            }
+            long average=sum/size;
+            //System.out.println(sum+ " "+ n);
+            System.out.println("Average times of connection are "+average+", n is "+n);
+            writeToCSV(fileName,n+","+average);
+            n*=2;
+        }
+    }
+
+    public static void writeToCSV(String fileName,String line){
+        FileWriter fw = null;
+        try {
+            File file=new File(fileName);
+            if(!file.exists()) file.createNewFile();
+            fw = new FileWriter(file,true);
+            fw.write(line+"\n");
+            fw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
