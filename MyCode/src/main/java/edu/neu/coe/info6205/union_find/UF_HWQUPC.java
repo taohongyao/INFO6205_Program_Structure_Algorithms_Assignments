@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -38,6 +39,7 @@ public class UF_HWQUPC implements UF {
      * @throws IllegalArgumentException if {@code n < 0}
      */
     public UF_HWQUPC(int n, boolean pathCompression) {
+        initN=n;
         count = n;
         parent = new int[n];
         height = new int[n];
@@ -85,13 +87,7 @@ public class UF_HWQUPC implements UF {
      */
     public int find(int p) {
         validate(p);
-//        int currentIndex=p;
-//        int root=parent[p];
-//        while (root!=currentIndex){
-//            currentIndex=root;
-//            root=parent[currentIndex];
-//        }
-//        return root;
+
         int currentNode=p;
         int parent=getParent(currentNode);
         while (parent!=currentNode) {
@@ -181,10 +177,11 @@ public class UF_HWQUPC implements UF {
         return parent[i];
     }
 
-    private final int[] parent;   // parent[i] = parent of i
-    private final int[] height;   // height[i] = height of subtree rooted at i
+    private  int[] parent;   // parent[i] = parent of i
+    private  int[] height;   // height[i] = height of subtree rooted at i
     private int count;  // number of components
     private boolean pathCompression;
+    private int initN;
 
     private void mergeComponents(int i, int j) {
         int iroot=find(i);
@@ -199,7 +196,7 @@ public class UF_HWQUPC implements UF {
             updateParent(iroot,jroot);
             updateHeight(jroot,iroot);
         }
-
+        count--;
 
     }
 
@@ -223,6 +220,51 @@ public class UF_HWQUPC implements UF {
             connectCount++;
         }
         return connectCount;
+    }
+
+    public void benchMarkUnionMerge(List<List<Integer>> lists){
+        count = initN;
+        parent = new int[count];
+        height = new int[count];
+        for (int i = 0; i < count; i++) {
+            parent[i] = i;
+            height[i] = 1;
+        }
+        for (List<Integer> list:lists){
+            mergeComponents(list.get(0),list.get(1));
+        }
+
+    }
+
+    public void benchMarkUnionMergeConnect(List<List<Integer>> lists){
+        count = initN;
+        parent = new int[count];
+        height = new int[count];
+        for (int i = 0; i < count; i++) {
+            parent[i] = i;
+            height[i] = 1;
+        }
+        for (List<Integer> list:lists){
+            mergeComponents(list.get(0),list.get(1));
+        }
+        for (List<Integer> list:lists){
+            connect(list.get(0),list.get(1));
+        }
+
+    }
+    public void benchMarkConnect(List<List<Integer>> lists){
+
+        for (List<Integer> list:lists){
+            connected(list.get(0),list.get(1));
+        }
+    }
+
+    public int getInitN() {
+        return initN;
+    }
+
+    public void setInitN(int initN) {
+        this.initN = initN;
     }
 
     public static void main(String[] args) {
